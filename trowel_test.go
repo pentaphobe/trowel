@@ -95,6 +95,41 @@ func (suite *TrowelSuite) TestDeep() {
 	suite.Equal(arrMapKey.Get().(bool), true)
 }
 
+func (suite *TrowelSuite) TestPath() {
+	input := `
+	{
+		"foo": {
+			"bar": 1,
+			"baz": [1, "boffle", false, {
+				"bling": true
+			}],
+			"bing": {
+				"bof": true,
+				"bif": 1.3
+			}
+		}
+	}
+	`
+	var data interface{}
+	err := json.Unmarshal([]byte(input), &data)
+	suite.Nil(err)
+	suite.NotNil(data)
+	t := NewTrowel(data)
+
+	paths := map[string]interface{}{
+		// No ints in JSON, so have to assume float64
+		"foo.bar":          1.0,
+		"foo.baz[0]":       1.0,
+		"foo.baz[1]":       "boffle",
+		"foo.baz[3].bling": true,
+	}
+	for path, expected := range paths {
+		child, err := t.Path(path)
+		suite.Nil(err)
+		suite.Equal(child.Get(), expected)
+	}
+}
+
 func TestTrowelSuite(t *testing.T) {
 	suite.Run(t, new(TrowelSuite))
 }

@@ -1,12 +1,18 @@
 package trowel
 
-import "fmt"
+import (
+	"fmt"
+	"regexp"
+	"strconv"
+)
 
 type Trowel interface {
 	// Get value from underlying array
 	Index(idx int) (Trowel, error)
 	// Get value from underlying dictionary
 	Key(key string) (Trowel, error)
+	// Get by a path string
+	Path(path string) (Trowel, error)
 
 	// Get underlying data
 	Get() interface{}
@@ -50,6 +56,48 @@ func (w *trowelWrapper) Key(key string) (Trowel, error) {
 	return &trowelWrapper{
 		data: mp[key],
 	}, nil
+}
+
+func parsePath(pathStr string) ([]interface{}, error) {
+	re := regexp.MustCompile("([.]|\\[[0-9]\\]|[a-z]+)")
+	split := re.FindAllString(pathStr, -1)
+	result := make([]interface{}, 0)
+	for _, v := range split {
+		if v == "." {
+			continue
+		}
+		if v[0] == '[' {
+			indexStr := v[1 : len(v)-1]
+			idx, err := strconv.Atoi(indexStr)
+			if err != nil {
+				return nil, fmt.Errorf("invalid index %s", indexStr)
+			}
+			result = append(result, idx)
+			continue
+		}
+		result = append(result, v)
+	}
+	return result, nil
+}
+
+func (w *trowelWrapper) Path(path string) (Trowel, error) {
+	pathComponents, err := parsePath(path)
+	if err != nil {
+		return nil, err
+	}
+	var child Trowel = w
+	for _, component := range pathComponents {
+		switch v := component.(type) {
+		case int:
+			child, err = child.Index(v)
+		case string:
+			child, err = child.Key(v)
+		}
+		if err != nil {
+			return nil, err
+		}
+	}
+	return child, nil
 }
 
 func (w *trowelWrapper) Array() ([]interface{}, error) {
