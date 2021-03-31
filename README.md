@@ -33,12 +33,13 @@ import (
 	"github.com/pentaphobe/trowel"
 )
 
-const exampleJSON = `{
-  "foo": {
-    "baz": [1, "boffle", false, {
-      "bling": true
-    }]	
-  },
+const exampleJSON = `
+{
+	"foo": {
+		"baz": [1, "boffle", false, {
+			"bling": true
+		}]
+	},
 	"key.with.special_characters": true
 }
 `
@@ -53,7 +54,7 @@ func main() {
 	// Wrap the object
 	t := trowel.NewTrowel(obj)
 
-  // Deep inspection
+	// Deep inspection
 	result, err := t.Path(`.foo.baz[3].bling`)
 	if err != nil {
 		panic(err)
