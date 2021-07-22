@@ -4,68 +4,71 @@ import (
 	"fmt"
 )
 
+type ErrorContext interface{}
 type TrowelError struct {
+	Context ErrorContext
 	Message string
 }
 
 type TrowelIndexError struct {
-	TrowelError
-	Index int
+	Context ErrorContext
+	Message string
+	Index   int
 }
 
 type TrowelKeyError struct {
-	TrowelError
-	Key string
+	Context ErrorContext
+	Message string
+	Key     string
 }
 
 type TrowelParseError struct {
-	TrowelError
+	Context ErrorContext
+	Message string
 }
 
 func (e *TrowelError) Error() string {
-	return fmt.Sprintf("TrowelError: %s", e.Message)
+	return fmt.Sprintf("TrowelError: %s, CONTEXT: %+v", e.Message, e.Context)
 }
 
 func (e *TrowelIndexError) Error() string {
-	return fmt.Sprintf("TrowelIndexError: %s", e.Message)
+	return fmt.Sprintf("TrowelIndexError: %s, CONTEXT: %+v", e.Message, e.Context)
 }
 
 func (e *TrowelKeyError) Error() string {
-	return fmt.Sprintf("TrowelKeyError: %s", e.Message)
+	return fmt.Sprintf("TrowelKeyError: %s, CONTEXT: %+v", e.Message, e.Context)
 }
 
 func (e *TrowelParseError) Error() string {
-	return fmt.Sprintf("TrowelParseError: %s", e.Message)
+	return fmt.Sprintf("TrowelParseError: %s, CONTEXT: %+v", e.Message, e.Context)
 }
 
-func NewError(message string, rest ...interface{}) *TrowelError {
+func NewError(ctx ErrorContext, message string, rest ...interface{}) *TrowelError {
 	return &TrowelError{
+		Context: ctx,
 		Message: fmt.Sprintf(message, rest...),
 	}
 }
 
-func NewIndexError(message string, index int, rest ...interface{}) *TrowelIndexError {
+func NewIndexError(ctx ErrorContext, message string, index int, rest ...interface{}) *TrowelIndexError {
 	return &TrowelIndexError{
-		TrowelError: TrowelError{
-			Message: fmt.Sprintf(message, append([]interface{}{index}, rest...)...),
-		},
-		Index: index,
+		Context: ctx,
+		Message: fmt.Sprintf(message, append([]interface{}{index}, rest...)...),
+		Index:   index,
 	}
 }
 
-func NewKeyError(message string, key string, rest ...interface{}) *TrowelKeyError {
+func NewKeyError(ctx ErrorContext, message string, key string, rest ...interface{}) *TrowelKeyError {
 	return &TrowelKeyError{
-		TrowelError: TrowelError{
-			Message: fmt.Sprintf(message, append([]interface{}{key}, rest...)...),
-		},
-		Key: key,
+		Context: ctx,
+		Message: fmt.Sprintf(message, append([]interface{}{key}, rest...)...),
+		Key:     key,
 	}
 }
 
-func NewParseError(message string, rest ...interface{}) *TrowelParseError {
+func NewParseError(ctx ErrorContext, message string, rest ...interface{}) *TrowelParseError {
 	return &TrowelParseError{
-		TrowelError: TrowelError{
-			Message: fmt.Sprintf(message, rest...),
-		},
+		Context: ctx,
+		Message: fmt.Sprintf(message, rest...),
 	}
 }

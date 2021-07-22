@@ -108,8 +108,8 @@ func (suite *TrowelSuite) TestIndex() {
 	}
 	t := NewTrowel(data)
 	for i, val := range data {
-		result, err := t.Index(i)
-		suite.Nil(err)
+		result := t.Index(i)
+		suite.False(result.HasErrors())
 		suite.NotNil(val)
 		suite.Equal(val, result.Get())
 	}
@@ -122,8 +122,8 @@ func (suite *TrowelSuite) TestKey() {
 	}
 	t := NewTrowel(data)
 	for key, val := range data {
-		result, err := t.Key(key)
-		suite.Nil(err)
+		result := t.Key(key)
+		suite.False(result.HasErrors())
 		suite.NotNil(val)
 		suite.Equal(val, result.Get())
 	}
@@ -150,14 +150,14 @@ func (suite *TrowelSuite) TestDeep() {
 	suite.NotNil(data)
 	t := NewTrowel(data)
 
-	first, err := t.Key("foo")
-	suite.Nil(err)
-	arr, err := first.Key("baz")
-	suite.Nil(err)
-	arrMap, err := arr.Index(3)
-	suite.Nil(err)
-	arrMapKey, err := arrMap.Key("bling")
-	suite.Nil(err)
+	first := t.Key("foo")
+	suite.False(first.HasErrors())
+	arr := first.Key("baz")
+	suite.False(arr.HasErrors())
+	arrMap := arr.Index(3)
+	suite.False(arrMap.HasErrors())
+	arrMapKey := arrMap.Key("bling")
+	suite.False(arrMapKey.HasErrors())
 	suite.Equal(arrMapKey.Get().(bool), true)
 }
 
@@ -192,8 +192,8 @@ func (suite *TrowelSuite) TestPath() {
 		`.foo."special.key"`: true,
 	}
 	for path, expected := range paths {
-		child, err := t.Path(path)
-		suite.Nil(err)
+		child := t.Path(path)
+		suite.False(child.HasErrors())
 		suite.NotNil(child)
 		suite.Equal(expected, child.Get())
 	}
@@ -229,26 +229,29 @@ func (suite *TrowelSuite) TestPath_Invalid() {
 		".foo.baz[invalid]":      &TrowelParseError{},
 	}
 	for path, expected := range paths {
-		val, err := t.Path(path)
-		suite.Nil(val)
-		suite.IsType(expected, err, fmt.Sprintf("path:'%s'", path))
+		val := t.Path(path)
+		suite.Nil(val.Get())
+		suite.True(val.HasErrors())
+		suite.IsType(expected, val.Errors()[0], fmt.Sprintf("path:'%s'", path))
 	}
 }
 
 func (suite *TrowelSuite) TestIndex_Nil() {
 	t := NewTrowel(nil)
 
-	result, err := t.Index(0)
+	result := t.Index(0)
 	suite.Nil(result.Get())
-	suite.IsType(err, &TrowelIndexError{})
+	suite.True(result.HasErrors())
+	suite.IsType(result.Errors()[0], &TrowelIndexError{})
 }
 
 func (suite *TrowelSuite) TestIndex_Non_Array() {
 	t := NewTrowel(10)
 
-	result, err := t.Index(0)
+	result := t.Index(0)
 	suite.Nil(result.Get())
-	suite.IsType(err, &TrowelIndexError{})
+	suite.True(result.HasErrors())
+	suite.IsType(result.Errors()[0], &TrowelIndexError{})
 }
 
 func TestTrowelSuite(t *testing.T) {

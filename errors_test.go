@@ -12,30 +12,39 @@ type ErrorsSuite struct {
 
 func (t *ErrorsSuite) TestTrowelError() {
 	msg := "MESSAGE"
-	err := NewError(msg)
-	t.Equal(msg, err.Message)
-	t.Equal("TrowelError: "+msg, err.Error())
+	err := NewError(nil, msg)
+	t.Contains(err.Message, msg)
+	t.Contains(err.Error(), "TrowelError: "+msg)
 }
 
 func (t *ErrorsSuite) TestTrowelIndexError() {
 	msg := "MESSAGE"
-	err := NewIndexError(msg+" %d", 31337)
-	t.Equal(msg+" 31337", err.TrowelError.Message)
-	t.Equal("TrowelIndexError: "+msg+" 31337", err.Error())
+	err := NewIndexError(nil, msg+" %d", 31337)
+	t.Contains(err.Message, msg+" 31337")
+	t.Contains(err.Error(), "TrowelIndexError: "+msg+" 31337")
 }
 
 func (t *ErrorsSuite) TestTrowelKeyError() {
 	msg := "MESSAGE"
-	err := NewKeyError(msg+" %s", "foo")
-	t.Equal(msg+" foo", err.TrowelError.Message)
-	t.Equal("TrowelKeyError: "+msg+" foo", err.Error())
+	err := NewKeyError(nil, msg+" %s", "foo")
+	t.Contains(err.Message, msg+" foo")
+	t.Contains(err.Error(), "TrowelKeyError: "+msg+" foo")
 }
 
 func (t *ErrorsSuite) TestTrowelParseError() {
 	msg := "MESSAGE"
-	err := NewParseError(msg)
-	t.Equal(msg, err.TrowelError.Message)
-	t.Equal("TrowelParseError: MESSAGE", err.Error())
+	err := NewParseError(nil, msg)
+	t.Contains(err.Message, msg)
+	t.Contains(err.Error(), "TrowelParseError: MESSAGE")
+}
+
+func (t *ErrorsSuite) TestErrorHelpers() {
+	// intentionally skip constructor, resulting in empty `errors` array
+	obj := &trowelWrapper{}
+	t.Nil(obj.Error())
+	obj.addError(NewError(obj, "hi"))
+	t.Len(obj.Errors(), 1)
+	t.NotNil(obj.Error())
 }
 
 func TestErrorsSuite(t *testing.T) {
